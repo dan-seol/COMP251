@@ -7,7 +7,7 @@ public class Testboard {
 
 	
 	public static void main(String[] args) throws IOException {
-		// TODO Auto-generated method stub
+
 		 long start = System.currentTimeMillis();
 		int[] info = new int[3];
 		
