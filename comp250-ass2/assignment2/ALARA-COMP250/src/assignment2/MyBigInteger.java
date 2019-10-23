@@ -1,4 +1,3 @@
-
 /*
  *   STUDENT NAME      :  Alara Akal
  *   STUDENT ID        :260814700
@@ -14,7 +13,6 @@
  */
 package assignment2;
 import java.util.ArrayList;
-
 public class MyBigInteger  implements Comparable<MyBigInteger> {   //  We will cover what "implements Comparable" means later
 
 	/*
@@ -458,25 +456,37 @@ public class MyBigInteger  implements Comparable<MyBigInteger> {   //  We will c
 		return result;
 	}
 	
+	
+	
 	public ArrayList<MyBigInteger>  primeFactors() throws Exception {
 		
 		ArrayList<MyBigInteger> factors = new ArrayList<MyBigInteger>();
 
 		//  ADD YOUR CODE BELOW HERE
-		int n = 0;
-		int[] coeff = coefficients.toArray();
-		for(int i=0; i<coeff.length; i++) {
-			n += (int) Math.pow(this.base, i);
-		}
-		MyBigInteger ZERO = new MyBigInteger(0, this.base);
-		ArrayList<MyBigInteger> primes = primeToN(n, this.base);
-		for (prime : primes) {
-			if( this.mod(prime).compareTo(ZERO)==0) {
-				factors.add(prime);
+		MyBigInteger n = this;
+		int initialBase = n.getBase();
+		MyBigInteger ZERO = new MyBigInteger(0, initialBase);
+		MyBigInteger ONE = new MyBigInteger(1, initialBase);
+		MyBigInteger TWO = new MyBigInteger(2, initialBase);
+		
+			while(n.mod(TWO).compareTo(ZERO)==0) {
+				factors.add(TWO);
+				n = n.dividedBy(TWO);
 			}
-		}
-        
-
+		
+	    for (long i = 3; n.compareTo(new MyBigInteger(i+"",10).convert(initialBase)) >= 0; i += 2) {
+	    	MyBigInteger I = new MyBigInteger(i+"", 10).convert(initialBase); 
+	    
+	        while (n.mod(I).compareTo(ZERO) == 0) {
+	            factors.add(new MyBigInteger(i+"", 10).convert(initialBase));
+	            n  =  n.dividedBy(new MyBigInteger(i+"", 10).convert(initialBase));
+	            
+	        }
+	    }
+	    if(n.compareTo(ONE)>1) {
+	    	factors.add(n);
+	    }
+				
 		//  ADD YOUR CODE ABOVE HERE
 
 		return factors;
