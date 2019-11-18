@@ -27,8 +27,9 @@ public class KDTree implements Iterable<Datum>{
 		}
 		
 	//   Construct a KDNode that is the root node of the KDTree.
-		this.numLeaves = ct;
+		
 		rootNode = new KDNode(dataListArray);
+		this.numLeaves = rootNode.sumDepths_numLeaves()[1];
 	}
 	
 	//   KDTree methods
@@ -66,6 +67,7 @@ public class KDTree implements Iterable<Datum>{
 		return 1.0 * sumdepths_numLeaves[0] / sumdepths_numLeaves[1];
 	}
 	
+	
 	class KDNode { 
 
 		boolean leaf;
@@ -85,86 +87,91 @@ public class KDTree implements Iterable<Datum>{
 			 *  This method takes in an array of Datum and returns
 			 *  the calling KDNode object as the root of a sub-tree containing
 			 *  the above fields.
-			 */
-			this(cleanDuplicates(datalist), true);
-		}
-		
-		KDNode(Datum[] datalist, boolean isArrayCleaned) throws Exception{
-			if(!isArrayCleaned) {
-				throw new Exception("It still contains duplicates after the cleaning");
-			}
-			if(datalist.length<1) {
-				throw new Exception("You put in an empty array");
-			}
+			 */			
 			this.leaf = false;
-			//1.the base case
 			if(datalist.length == 1) {
-				this.leaf=true;
-				this.leafDatum=datalist[0];
-				this.highChild=null;
+				this.leaf= true;
+				this.leafDatum = datalist[0];
+				this.highChild= null;
 				this.lowChild=null;
 
 			} else {
-				//2. recursive(inductive) step
-				double maxRangeValue = 0;
-				double naiveSplitValue = 0;
+
+				boolean isThereDuplicate = datalist[0].equals(datalist[1]);
+				for(int i = 1; i<datalist.length-1;i++) {
+					isThereDuplicate &= datalist[i].equals(datalist[i+1]);
+				}
+				if(isThereDuplicate) {
+					this.leaf= true;
+					this.leafDatum = datalist[0];
+					this.highChild= null;
+					this.lowChild=null;
+				} else {double maxRangeValue = 0;
 				splitDim = 0;
-				for(int i =0; i< datalist[0].x.length;i++){
-					long maxValue = Long.MIN_VALUE;
-					long minValue = Long.MAX_VALUE;
-					for(int j=0;j<datalist.length;j++){
-						if(datalist[j].x[i] > maxValue)
-						{maxValue=datalist[j].x[i];}
-						if(datalist[j].x[i] < minValue)
-						{minValue=datalist[j].x[i];}
+				for(int i =0; i< datalist[0].x.length;++i){
+					int largestNum = Integer.MIN_VALUE;
+					int smallestNum = Integer.MAX_VALUE; 					for(int j=0;j<datalist.length;++j){
+						if(datalist[j].x[i] > largestNum)
+						{largestNum=datalist[j].x[i];}
+						if(datalist[j].x[i] < smallestNum)
+						{smallestNum=datalist[j].x[i];}
 					}
 
-					if(maxValue - minValue > maxRangeValue ){
-						maxRangeValue =maxValue - minValue;
-						naiveSplitValue = (maxValue+minValue)/2.0;
+					if(largestNum - smallestNum >maxRangeValue ){
+						maxRangeValue =largestNum - smallestNum;
 
 						splitDim = i;
 					}
 				}
 
+				int maxValue = Integer.MIN_VALUE;
+				double minValue = Double.MAX_VALUE;
+
+				for(int i =0;i<datalist.length;i++) {
+					if (datalist[i].x[splitDim] > maxValue) {
+						maxValue = datalist[i].x[splitDim];
+					}
+					if (datalist[i].x[splitDim] < minValue) {
+						minValue = datalist[i].x[splitDim];
+					}
+				}
+				double rawSplitValue = (maxValue+minValue)/2;
+
 				int lowChildren =0;
 				int highChildren =0;
 
 				for(int i = 0; i<datalist.length ; i++ ){
-					if(datalist[i].x[splitDim] > naiveSplitValue){
+					if(datalist[i].x[splitDim] > rawSplitValue){
 						highChildren++;
 					}else {
 						lowChildren++;
 					}
 				}
-				
 				Datum[] rawLowChild  = new Datum[lowChildren];
 				Datum[] rawHighChild = new Datum[highChildren];
 
 				for(int i = 0,j = 0,k = 0 ; i<datalist.length; i++){
-					if(datalist[i].x[splitDim] > naiveSplitValue){
-						rawHighChild[k]=datalist[i];
-						k++;
-						
-					}else {
+					if(datalist[i].x[splitDim] <= rawSplitValue){
 						rawLowChild[j]=datalist[i];
 						j++;
+					}else {
+						rawHighChild[k]=datalist[i];
+						k++;
 					}
 				}
 
-				this.splitValue = (int) naiveSplitValue;
-				//inductive hypothesis : we assume the constructor correctly works for the children
-				this.lowChild=new KDNode(rawLowChild, true);
-				this.highChild=new KDNode(rawHighChild, true);
-			}
-
+				this.splitValue = (int) rawSplitValue;
+				this.lowChild=new KDNode(rawLowChild);
+				this.highChild=new KDNode(rawHighChild);
+			}}
+				
 		}
 
 		public Datum nearestPointInNode(Datum queryPoint) {
 			Datum nearestPoint, nearestPoint_otherSide;
 		
 			//   ADD YOUR CODE BELOW HERE
-			boolean isOnTheLow;
+			boolean isLow;
 			if(this.leaf) {
 				nearestPoint = this.leafDatum;
 				return nearestPoint;
@@ -172,23 +179,23 @@ public class KDTree implements Iterable<Datum>{
 				int distanceFromSplit = queryPoint.x[splitDim] - this.splitValue;
 				if(distanceFromSplit <=0) {
 					nearestPoint = this.lowChild.nearestPointInNode(queryPoint);
-					isOnTheLow = true;
+					isLow = true;
 				} else {
 					nearestPoint = this.highChild.nearestPointInNode(queryPoint);
-					isOnTheLow = false;
+					isLow = false;
 				}
 				long minDistCandidate =  distSquared(nearestPoint, queryPoint);
 				if(minDistCandidate <= distanceFromSplit * distanceFromSplit) {
 					return nearestPoint;
 				} else {
-					if(isOnTheLow) {
+					if(isLow) {
 						nearestPoint_otherSide = this.highChild.nearestPointInNode(queryPoint);
 					} else {
 						nearestPoint_otherSide = this.lowChild.nearestPointInNode(queryPoint);
 
 					}
-					
-					if(minDistCandidate <= distSquared(nearestPoint_otherSide, queryPoint)) {
+					long other_minDistCandidate = distSquared(nearestPoint_otherSide, queryPoint);
+					if(minDistCandidate <= other_minDistCandidate) {
 						return nearestPoint;
 					} else {
 						return nearestPoint_otherSide;
@@ -251,36 +258,13 @@ public class KDTree implements Iterable<Datum>{
 		return new KDTreeIterator();
 	}
 	
-	public static void inOrderSearch(KDNode kdNode, ArrayList<Datum> silo) {
+	public static void inOrder(KDNode kdNode, ArrayList<Datum> dataArr) {
 		if(kdNode.leaf) {
-			silo.add(kdNode.leafDatum);
+			dataArr.add(kdNode.leafDatum);
 		} else {
-			inOrderSearch(kdNode.lowChild, silo);
-			inOrderSearch(kdNode.highChild, silo);
+			inOrder(kdNode.lowChild, dataArr);
+			inOrder(kdNode.highChild, dataArr);
 		}
-	}
-	
-	/**
-	 * 
-	 * @param datalist a list of data to remove duplicates
-	 * @return a list of the data with duplicated removed
-	 */
-	public static Datum[] cleanDuplicates(Datum[] datalist) {
-		int numPoints = datalist.length;
-		
-		ArrayList<Datum> dataArrayList = new ArrayList<Datum>();
-		for(int i=0; i<numPoints; i++) {
-			if(!dataArrayList.contains(datalist[i])) {
-				dataArrayList.add(datalist[i]);
-			}
-		}
-		int cleanNumPoints = dataArrayList.size();
-		
-		Datum[] dataCleanList = new Datum[cleanNumPoints];	
-		for(int i=0; i<cleanNumPoints; i++) {
-			dataCleanList[i] = dataArrayList.get(i);
-		}
-		return dataCleanList;
 	}
 	
 	private class KDTreeIterator implements Iterator<Datum> {
@@ -288,13 +272,13 @@ public class KDTree implements Iterable<Datum>{
 		//   ADD YOUR CODE BELOW HERE
 		KDTree kdTree;
 		KDNode root;
-		ArrayList<Datum> dataList = new ArrayList<Datum>();
+		ArrayList<Datum> data = new ArrayList<Datum>();
 		Iterator<Datum> iterator;
 		KDTreeIterator() {
 			this.kdTree = KDTree.this;
 			this.root = kdTree.rootNode;
-			inOrderSearch(root, this.dataList);
-			this.iterator = this.dataList.iterator();
+			inOrder(root, this.data);
+			this.iterator = this.data.iterator();
 
 		}
 		public Datum next() {

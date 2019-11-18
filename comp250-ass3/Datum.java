@@ -1,5 +1,4 @@
-
-
+package assignment3;
 
 import java.util.Arrays;
 
@@ -41,4 +40,5 @@ public class Datum {
 		return Arrays.equals(d.x, this.x);
 	}
 }
+
 

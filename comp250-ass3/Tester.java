@@ -1,4 +1,4 @@
-
+package assignment3;
 
 import java.util.*;
 
@@ -181,7 +181,7 @@ public class Tester {
         boolean ordering_flag=true;
         while (it.hasNext()) {
             int iterval = it.next().x[0];
-            //System.out.println(iterval+" - "+raw_points_set[ct]);
+            //System.out.println(interval+" - "+raw_points_set[ct]);
             if(raw_points_set[ct] != iterval)
                 ordering_flag=false;
             ct++;
@@ -234,7 +234,7 @@ public class Tester {
 
         // How many dimensional space?
         // Testing of the iterator is available only for 1D points.
-        int numdimensions = 3; // Options: 1, 2, 3
+        int numdimensions = 4; // Options: 1, 2, 3
 
         // Data distribution?
         Option op = Option.RANDOM; // Options: Option.UNIFORM, Option.SHAPE, Option.RANDOM,
@@ -385,7 +385,7 @@ public class Tester {
                     case RANDOM:
                         int[] lows = {-50, -50, -50};
                         int[] highs = {50, 50, 50};
-                        points = makeDataPointsRandom(lows, highs, 100000, 2, allow_duplicates);
+                        points = makeDataPointsRandom(lows, highs, 1000, 2, allow_duplicates);
                         
                         System.out.println("Constructing tree... (Should only take a few hundred milliseconds to construct a tree containing 100000 Datums)");
                     	s_time = System.nanoTime();
@@ -426,8 +426,16 @@ public class Tester {
                 break;
 
             case 4:
-                break;
-
+            	int[] qList_4[] =  {{-400,200, 100, 0}, {234, 536,73, -1000}, {42, 0, -16, -273}, {333, 101,55, 472}, {-222, 5, 87, 2}, {5, -432, 21, 4}, {123, 56, -2, 10000}};
+            	
+            	ArrayList<Datum> data = new ArrayList<Datum>();
+            	
+            	for(int i=0; i<7; i++) {
+            		data.add(new Datum(qList_4[i]));
+            	}
+            	KDTree newTree = new KDTree(data);
+            	testIterator(newTree, data);
+                
 
 
         }

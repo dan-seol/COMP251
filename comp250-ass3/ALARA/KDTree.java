@@ -27,8 +27,8 @@ public class KDTree implements Iterable<Datum>{
 		}
 		
 	//   Construct a KDNode that is the root node of the KDTree.
-		this.numLeaves = ct;
 		rootNode = new KDNode(dataListArray);
+		this.numLeaves = rootNode.sumDepths_numLeaves()[1];
 	}
 	
 	//   KDTree methods
@@ -86,13 +86,7 @@ public class KDTree implements Iterable<Datum>{
 			 *  the calling KDNode object as the root of a sub-tree containing
 			 *  the above fields.
 			 */
-			this(cleanDuplicates(datalist), true);
-		}
-		
-		KDNode(Datum[] datalist, boolean isArrayCleaned) throws Exception{
-			if(!isArrayCleaned) {
-				throw new Exception("It still contains duplicates after the cleaning");
-			}
+			
 			if(datalist.length<1) {
 				throw new Exception("You put in an empty array");
 			}
@@ -105,6 +99,19 @@ public class KDTree implements Iterable<Datum>{
 				this.lowChild=null;
 
 			} else {
+				
+				boolean isThereDuplicate = datalist[0].equals(datalist[1]);
+				for(int i = 1; i<datalist.length-1;i++) {
+					isThereDuplicate &= datalist[i].equals(datalist[i+1]);
+				}
+
+				if(isThereDuplicate) {
+					this.leaf=true;
+					this.leafDatum=datalist[0];
+					this.highChild=null;
+					this.lowChild=null;
+					
+				} else {
 				//2. recursive(inductive) step
 				double maxRangeValue = 0;
 				double naiveSplitValue = 0;
@@ -154,11 +161,13 @@ public class KDTree implements Iterable<Datum>{
 
 				this.splitValue = (int) naiveSplitValue;
 				//inductive hypothesis : we assume the constructor correctly works for the children
-				this.lowChild=new KDNode(rawLowChild, true);
-				this.highChild=new KDNode(rawHighChild, true);
+				this.lowChild=new KDNode(rawLowChild);
+				this.highChild=new KDNode(rawHighChild);
 			}
-
 		}
+		}
+		
+		
 
 		public Datum nearestPointInNode(Datum queryPoint) {
 			Datum nearestPoint, nearestPoint_otherSide;
@@ -260,29 +269,7 @@ public class KDTree implements Iterable<Datum>{
 		}
 	}
 	
-	/**
-	 * 
-	 * @param datalist a list of data to remove duplicates
-	 * @return a list of the data with duplicated removed
-	 */
-	public static Datum[] cleanDuplicates(Datum[] datalist) {
-		int numPoints = datalist.length;
-		
-		ArrayList<Datum> dataArrayList = new ArrayList<Datum>();
-		for(int i=0; i<numPoints; i++) {
-			if(!dataArrayList.contains(datalist[i])) {
-				dataArrayList.add(datalist[i]);
-			}
-		}
-		int cleanNumPoints = dataArrayList.size();
-		
-		Datum[] dataCleanList = new Datum[cleanNumPoints];	
-		for(int i=0; i<cleanNumPoints; i++) {
-			dataCleanList[i] = dataArrayList.get(i);
-		}
-		return dataCleanList;
-	}
-	
+
 	private class KDTreeIterator implements Iterator<Datum> {
 		
 		//   ADD YOUR CODE BELOW HERE
